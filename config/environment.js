@@ -14,6 +14,7 @@ module.exports = function (environment) {
     },
 
     APP: {
+      rootElement: '.cheese',
       // Here you can pass flags/options to your application instance
       // when it is created
     },
