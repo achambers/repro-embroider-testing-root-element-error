@@ -1,57 +1,52 @@
-# with-embroider
+# repro-embroider-testing-root-element-error
 
-This README outlines the details of collaborating on this Ember application.
-A short introduction of this app could easily go here.
+This repo reproduces an error I'm experiencing with running tests from localhost:4200/tests under embroider when `storeConfigInMeta: true`.
 
-## Prerequisites
+## How to reproduce
 
-You will need the following things properly installed on your computer.
+1. Clone this repo
 
-* [Git](https://git-scm.com/)
-* [Node.js](https://nodejs.org/)
-* [Yarn](https://yarnpkg.com/)
-* [Ember CLI](https://cli.emberjs.com/release/)
-* [Google Chrome](https://google.com/chrome/)
+```bash
+git clone git@github.com:achambers/repro-embroider-testing-root-element-error.git
+```
 
-## Installation
+2. Install dependencies
 
-* `git clone <repository-url>` this repository
-* `cd with-embroider`
-* `yarn install`
+```bash
+cd repro-embroider-testing-root-element-error && yarn install
+```
 
-## Running / Development
+3. Run the dev server
 
-* `ember serve`
-* Visit your app at [http://localhost:4200](http://localhost:4200).
-* Visit your tests at [http://localhost:4200/tests](http://localhost:4200/tests).
+```bash
+ember serve
+```
 
-### Code Generators
+4. Visit http://localhost:4200/tests
 
-Make use of the many generators for code, try `ember help generate` for more details
+5. Observe an error in the console
 
-### Running Tests
+<img width="534" alt="image" src="https://user-images.githubusercontent.com/416724/228571776-6f2424f6-9e38-4f19-a73e-d88d03c619e3.png">
 
-* `ember test`
-* `ember test --server`
 
-### Linting
+## Extra context
 
-* `yarn lint`
-* `yarn lint:fix`
+Note that, in this example we have defined the `rootElement` for non-test builds, in this case `.cheese`
+https://github.com/achambers/repro-embroider-testing-root-element-error/blob/92558c8c6bfdbd7cc5b3603e2ac8a8b3b7499707/config/environment.js#L17
 
-### Building
+We have also set `storeConfigInMeta: false`
+https://github.com/achambers/repro-embroider-testing-root-element-error/blob/92558c8c6bfdbd7cc5b3603e2ac8a8b3b7499707/ember-cli-build.js#L7
 
-* `ember build` (development)
-* `ember build --environment production` (production)
+If you set a debugger at the line that is throwing the error - `at Class.setup (event_dispatcher.js:145:1)` - you'll notice that the `rootElementSelector` property just above it is set to `.cheese`. This element doesn't exist in `test` as the root element is actually `#ember-testing`.
 
-### Deploying
+If you do a search through the JS for `"rootElement":` you will see it defined twice, both times with values of `.cheese`.
+<img width="455" alt="image" src="https://user-images.githubusercontent.com/416724/228573076-884fcdda-3ad2-47a9-994a-977e3520ee95.png">
 
-Specify what it takes to deploy your app.
+If you then set `storeConfigInMeta: true` and restart the server you will notice the following things:
 
-## Further Reading / Useful Links
-
-* [ember.js](https://emberjs.com/)
-* [ember-cli](https://cli.emberjs.com/release/)
-* Development Browser Extensions
-  * [ember inspector for chrome](https://chrome.google.com/webstore/detail/ember-inspector/bmdblncegkenkacieihfhpjfppoconhi)
-  * [ember inspector for firefox](https://addons.mozilla.org/en-US/firefox/addon/ember-inspector/)
+1. The tests pass.
+2. The value of `rootElementSelector` in `event_dispatcher.js` is `#ember-testing` which is what we want.
+3. Searching the `"rootElement":` only gives one result
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/416724/228573887-b24481d8-ba8d-4bd4-98e3-a13748417c1b.png">
+5. The config that is in the meta tag contains `rootElement: '#ember-testing'`
+<img width="907" alt="image" src="https://user-images.githubusercontent.com/416724/228574108-c2974f02-892d-422c-b57c-9665857a17e1.png">
